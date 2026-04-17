@@ -4,16 +4,17 @@ pipeline {
     stages {
         stage('1. Environment Setup') {
             steps {
-                // This clears the workspace and clones fresh from the correct URL
+                // Deletes the workspace to ensure a clean start
                 deleteDir()
+                // Forced clone from your specific repository
                 bat 'git clone https://github.com .'
             }
         }
 
-        stage('2. Build & JUnit Tests') {
+        stage('2. Build & Unit Tests') {
             steps {
                 dir('oms-core') {
-                    // Compiles and runs the 3 tests (Success, Out of Stock, Payment Fail)
+                    // Runs the Java compilation and the 3 JUnit tests
                     bat 'mvn clean package'
                 }
             }
@@ -22,7 +23,7 @@ pipeline {
         stage('3. Containerize (Docker)') {
             steps {
                 dir('oms-core') {
-                    // Builds the image for the local registry
+                    // Builds the Docker image locally
                     bat 'docker build -t raashidcodes/oms-core:latest .'
                 }
             }
@@ -31,15 +32,15 @@ pipeline {
         stage('4. Orchestrate (Kubernetes)') {
             steps {
                 dir('oms-core') {
-                    // Deploys the 2 replicas to K8s
+                    // Deploys the 2 replicas to your local K8s cluster
                     bat 'kubectl apply -f deployment.yaml'
                 }
             }
         }
 
-        stage('5. Final Proof') {
+        stage('5. Final Verification') {
             steps {
-                // The logs your professor needs to see
+                // Displays the running pods for the professor
                 bat 'kubectl get pods'
                 bat 'kubectl get svc oms-service'
             }
